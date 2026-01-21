@@ -2,9 +2,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import jwt from 'jsonwebtoken'
 import { db } from '../../../server/db'
+import { redisClient, connectRedis } from '../../../lib/redis'
+
+connectRedis()
 
 const JWT_SECRET = process.env.JWT_SECRET!
-
+const EXP = 3600
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -21,6 +24,17 @@ export default async function handler(
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: string }
+    if (!decoded.userId) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    const cacheKey = `user:${decoded.userId}`
+    const cachedUser = await redisClient.get(cacheKey)
+    if (cachedUser) {
+      console.log('User found in cache')
+      return res.status(200).json(JSON.parse(cachedUser))
+    }
+
     const user = await db.user.findUnique({
       where: { id: decoded.userId },
       select: { id: true, email: true, name: true, createdAt: true }
@@ -29,6 +43,9 @@ export default async function handler(
     if (!user) {
       return res.status(404).json({ error: 'User not found' })
     }
+
+    await redisClient.setEx(cacheKey, EXP, JSON.stringify(user))
+    console.log('User not found in cache, fetching from database')
 
     return res.status(200).json(user)
   } catch (error) {

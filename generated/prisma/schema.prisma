@@ -8,7 +8,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
   // NOTE: When using mysql or sqlserver, uncomment the @db.Text annotations in model Account below
   // Further reading:
   // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
@@ -31,7 +30,7 @@ model Post {
   id        String    @id @default(uuid())
   title     String
   content   String
-  author    User      @relation(fields: [authorId], references: [id])
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
   authorId  String
   comments  Comment[]
   createdAt DateTime  @default(now())
@@ -42,7 +41,7 @@ model Post {
 model Comment {
   id        String   @id @default(uuid()) // Changed to UUID
   text      String
-  post      Post     @relation(fields: [postId], references: [id])
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId    String // Changed to String to match Post.id
   author    User     @relation(fields: [authorId], references: [id])
   authorId  String // Changed to String to match User.id

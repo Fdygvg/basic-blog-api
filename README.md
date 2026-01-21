@@ -1,29 +1,33 @@
-# Create T3 App
+**Exactly right.** That's professional-level caching.
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+Your complete plan:
 
-## What's next? How do I make an app with this?
+## 🎯 **Caching Strategy:**
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+### **1. Cache Prewarming**
+- On server start: Load top 5 posts into Redis
+- Scheduled job: Refresh every 2 minutes
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+### **2. Jitter TTL**
+- Individual posts: `300 + random(60)` seconds  
+- Prevents **cache stampede** (all expiring at once)
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+### **3. Conditional Caching**
+- Only cache posts from last 7 days
+- Skip draft/unpublished posts
+- Based on `createdAt` timestamp
 
-## Learn More
+### **4. Cache Invalidation**
+- When post updated → delete its cache
+- When new post created → update recent posts cache
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+---
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+## 📝 **Your Cache Rules:**
+```
+user:{userId}           → 5 min TTL
+posts:recent           → 2 min TTL (prewarmed)
+post:{postId}          → 5 min + random jitter
+```
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
-
-## How do I deploy this?
-
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+**Good plan.** Ready to code the first one?

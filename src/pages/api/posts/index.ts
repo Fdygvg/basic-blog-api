@@ -1,5 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { db } from '@/server/db'
+import { redisClient, connectRedis } from '@/lib/redis'
+
+connectRedis()
 
 type PostResponse = {
     id: string
@@ -22,6 +25,14 @@ export default async function handler(
         return res.status(405).json({ error: 'Method not allowed' })
     }
 
+    const cacheKey = 'posts:recent'
+    const cachedPosts = await redisClient.get(cacheKey)
+    if (cachedPosts) {
+        console.log('Posts found in cache')
+        return res.status(200).json(JSON.parse(cachedPosts))
+    }
+
+
     try {
         const posts = await db.post.findMany({
             include: {
@@ -35,9 +46,11 @@ export default async function handler(
             },
             orderBy: {
                 createdAt: 'desc'
-            }
+            },
+            take: 5
         })
-
+        await redisClient.setEx(cacheKey, 120, JSON.stringify(posts))
+        console.log('Fetching Posts From Database')
         return res.status(200).json(posts)
     } catch (error) {
         console.error('Get posts error:', error)
