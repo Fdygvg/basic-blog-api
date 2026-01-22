@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { db } from '@/server/db'
 import { protect } from '@/server/middleware/auth'
+import { apiRateLimiter } from '@/server/middleware/rateLimiter'
 
 type CreatePostRequest = {
     title: string
@@ -35,4 +36,4 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 }
 
-export default protect(handler)
+export default apiRateLimiter(protect(handler))

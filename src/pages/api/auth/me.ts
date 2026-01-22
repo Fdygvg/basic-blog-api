@@ -3,12 +3,13 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import jwt from 'jsonwebtoken'
 import { db } from '../../../server/db'
 import { redisClient, connectRedis } from '../../../lib/redis'
+import { authRateLimiter } from '@/server/middleware/rateLimiter'
 
 connectRedis()
 
 const JWT_SECRET = process.env.JWT_SECRET!
 const EXP = 3600
-export default async function handler(
+async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -53,3 +54,5 @@ export default async function handler(
     return res.status(401).json({ error: 'Invalid token' })
   }
 }
+
+export default authRateLimiter(handler)

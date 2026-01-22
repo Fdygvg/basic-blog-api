@@ -2,8 +2,9 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { db } from '@/server/db'
 import bcrypt from 'bcryptjs'
 import type { SignupRequest, SignupResponse } from '@/types/index'
+import { authRateLimiter } from '@/server/middleware/rateLimiter'
 
-export default async function handler(
+async function handler(
     req: NextApiRequest,
     res: NextApiResponse<SignupResponse | { error: string }>
 ) {
@@ -54,3 +55,5 @@ export default async function handler(
         return res.status(500).json({ error: 'Internal server error' })
     }
 }
+
+export default authRateLimiter(handler)

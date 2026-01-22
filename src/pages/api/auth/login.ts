@@ -3,10 +3,11 @@ import { db } from '@/server/db'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import type { LoginRequest, LoginResponse } from '../../../types'
+import { authRateLimiter } from '@/server/middleware/rateLimiter'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production'
 
-export default async function handler(
+async function handler(
     req: NextApiRequest,
     res: NextApiResponse<LoginResponse | { error: string }>
 ) {
@@ -61,3 +62,5 @@ export default async function handler(
         return res.status(500).json({ error: 'Internal server error' })
     }
 }
+
+export default authRateLimiter(handler)

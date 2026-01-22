@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
+import { authRateLimiter } from '@/server/middleware/rateLimiter'
 
-export default async function handler(
+async function handler(
     req: NextApiRequest,
     res: NextApiResponse<{ message: string } | { error: string }>
 ) {
@@ -14,3 +15,5 @@ export default async function handler(
 
     return res.status(200).json({ message: 'Logged out successfully' })
 }
+
+export default authRateLimiter(handler)

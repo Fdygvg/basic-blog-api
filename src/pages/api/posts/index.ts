@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { db } from '@/server/db'
 import { redisClient, connectRedis } from '@/lib/redis'
+import { apiRateLimiter } from '@/server/middleware/rateLimiter'
 
 connectRedis()
 
@@ -17,7 +18,7 @@ type PostResponse = {
     }
 }
 
-export default async function handler(
+async function handler(
     req: NextApiRequest,
     res: NextApiResponse<PostResponse[] | { error: string }>
 ) {
@@ -57,3 +58,5 @@ export default async function handler(
         return res.status(500).json({ error: 'Internal server error' })
     }
 }
+
+export default apiRateLimiter(handler)
